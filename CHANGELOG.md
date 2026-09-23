@@ -2,12 +2,14 @@
 
 ## [Unreleased]
 
+## [0.11.1-preview.3] - 2026-09-23
+
 ### 兼容性
 
 - 增加 DSH `^0.1.7-alpha.1` 支持；真实宿主验收覆盖 `dsh-v0.1.7-alpha.1` 与 `dsh-v0.1.7-alpha.2`。
 - 保留 DSH `0.1.2-rc.1` 最低兼容基线检查。
 - 增加新版 DSH API 编译检查，确保宿主公开类型变化能够在发布前被发现。
-- DSH `0.1.7-alpha.2` 隐去围栏 language 时，从公开 ChatSnapshot 恢复原始 Markdown language；流式围栏可以立即识别，source 数据暂时不可用时保留严格的 settled CodeBlock 兜底。
+- DSH `0.1.7-alpha.2` 最终 DOM 不再暴露 `dsh-ui` fence language；改从公开 ChatSnapshot 原始 Markdown 恢复 source language，流式阶段即可识别，settle 后保持 GenUI，不回退为原始 JSON（#204）。
 - 适配新版 `CommandClaim.name` 与 ui-primitives 箭头图标导出变化。
 - 适配 `0.1.7-alpha.2` 的 `DiffBlockLabels` 工具栏文案。
 
