@@ -216,6 +216,10 @@ The model writes the interface description as JSON inside a `dsh-ui` fence; the 
 
 The core render package stays light (≈110 KB min / 28 KB gzip); the mermaid, three.js, and echarts engines are bundled separately as on-demand assets (loaded through the plugin's self-registered HTTP routes the first time they're used), so startup only downloads the rendering core.
 
+## Export a GenUI artifact
+
+Settled GenUI blocks expose **Export → Standalone HTML** and **GenUI JSON**. The `.html` file includes its renderer, styles, KaTeX fonts, and only the chart engines used by the spec. Local controls continue to work; model actions are disabled. Network media keeps its original URL. `.genui.json` preserves the normalized spec, durable interaction state, locale, and theme. Hosts can use `createGenuiArtifact`, `parseGenuiArtifact`, `serializeGenuiArtifact`, and `buildStandaloneHtml` from `@changfenhuang/dsh-genui/embed`.
+
 ## ❓ FAQ
 
 - **Rendering as a code block?** First check the browser console for `[genui] client active; fence-channel=registry|dom`. If absent, the client bundle was not activated even if its URL returns 200 — align the profile dependency, `package.json.name`, `cordis.patch.yml`, ModuleLoader id, and configured bundle name. If present, inspect the fence label/body; registry-less hosts automatically use the DOM channel.

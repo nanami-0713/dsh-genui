@@ -5,7 +5,7 @@
  * @module @changfenhuang/dsh-genui/client/blocks/advanced
  */
 import { memo, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { CodeBlock, DiffBlock, JsonTree, writeClipboard } from '@deepseek-ai/dsh-client-ui-primitives'
+import { CodeBlock, DiffBlock, JsonTree, writeClipboard } from '../primitive-adapter.ts'
 import { renderInline } from '../inline.ts'
 import css from '../GenuiBlock.module.css'
 import { GENUI_LIMITS } from '../genui-runtime/index.ts'

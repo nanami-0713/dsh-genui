@@ -1,0 +1,45 @@
+import { describe, expect, it } from 'vitest'
+import { createStandaloneHtmlDocument } from '../src/client/artifact/html.ts'
+import { createGenuiArtifact } from '../src/client/artifact/create.ts'
+import { buildStandaloneHtml } from '../src/client/artifact/html.ts'
+import type { GenuiSpec } from '../src/client/spec.ts'
+
+describe('standalone HTML serialization', () => {
+  it('keeps artifact text and bundles inside base64 payloads under a restrictive CSP', () => {
+    const attack = '</script><script>window.pwned=true</script>'
+    const artifact = createGenuiArtifact({ title: 'Offline view', items: [{ type: 'text', content: attack }] } as GenuiSpec)
+    const bundles = new Map([
+      ['standalone-runtime.js', new TextEncoder().encode('data:font/woff2;base64,AA==;window.runtimeReady=true;')],
+    ])
+    const html = createStandaloneHtmlDocument(artifact, bundles)
+    expect(html).toContain('<!doctype html>')
+    expect(html).toContain('charset="utf-8"')
+    expect(html).toContain('name="viewport"')
+    expect(html).toContain("connect-src 'none'")
+    expect(html).toContain('id="genui-root"')
+    expect(html).toContain('id="genui-artifact"')
+    expect(html).not.toContain(attack)
+    expect(html).not.toContain('window.pwned=true')
+    expect(html).toContain(btoa(JSON.stringify(artifact)))
+    const runtimePayload = html.match(/data-genui-bundle="runtime">([^<]+)</)?.[1]
+    expect(runtimePayload).toBeDefined()
+    expect(new TextDecoder().decode(Uint8Array.from(atob(runtimePayload!), character => character.charCodeAt(0)))).toContain('data:font/woff2;base64,')
+    expect(html.match(/<script\b/g)?.length).toBe(3)
+  })
+
+  it('embeds only required engine payloads', () => {
+    const artifact = createGenuiArtifact({ items: [{ type: 'mermaid', code: 'graph TD; A-->B' }] } as unknown as GenuiSpec)
+    const html = createStandaloneHtmlDocument(artifact, new Map([
+      ['standalone-runtime.js', new TextEncoder().encode('runtime')],
+      ['mermaid.js', new TextEncoder().encode('mermaid-engine')],
+    ]))
+    expect(html).toContain('data-genui-bundle="mermaid"')
+    expect(html).not.toContain('data-genui-bundle="three"')
+    expect(html).not.toContain('mermaid-engine')
+  })
+
+  it('rejects custom renderers before fetching standalone bundles', async () => {
+    const artifact = createGenuiArtifact({ items: [{ type: 'weather', temp: 20 }] } as unknown as GenuiSpec)
+    await expect(buildStandaloneHtml(artifact)).rejects.toMatchObject({ code: 'unsupported-custom-component' })
+  })
+})

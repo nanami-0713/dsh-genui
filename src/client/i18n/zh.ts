@@ -7,6 +7,16 @@
 import type { EN } from './en.ts'
 
 export const ZH: Record<keyof typeof EN, string> = {
+  // --------------------------------------------------------- 成果文件
+  'artifact.export': '导出',
+  'artifact.exportHtml': '独立 HTML',
+  'artifact.exportJson': 'GenUI JSON',
+  'artifact.exportFailed': '导出失败，请重试。',
+  'artifact.exporting': '正在准备下载…',
+  'artifact.exported': '已开始下载。',
+  'artifact.unsupportedCustom': '无法导出 HTML：独立运行环境无法显示自定义组件 {types}。可导出 GenUI JSON 保存这些节点。',
+  'artifact.externalMediaNotice': '此页面含有外部媒体，离线打开时部分内容可能无法显示。',
+
   // ---------------------------------------------------------------- panel
   'panel.badge': '面板',
   'panel.title.default': 'GenUI 面板',
