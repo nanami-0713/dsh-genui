@@ -12,7 +12,7 @@ import { GenuiActionContext } from '../src/client/action-context.ts'
 import { GenuiBlock, GENUI_ACTION_DEBOUNCE_MS } from '../src/client/GenuiBlock.tsx'
 import { repairGenuiSpec } from '../src/client/guard.ts'
 import { CORE_PRESETS } from '../src/client/echarts-lazy.ts'
-import { formatChartValue, tableToCsv, tableToMarkdown } from '../src/client/blocks/charts.tsx'
+import { formatChartValue, fractionDigits, tableToCsv, tableToMarkdown } from '../src/client/blocks/charts.tsx'
 
 afterEach(() => {
   cleanup()
@@ -24,17 +24,24 @@ beforeEach(() => {
 })
 
 describe('formatChartValue', () => {
-  it('removes floating point noise while preserving meaningful precision', () => {
-    expect(formatChartValue(0.30000000000000004)).toBe('0.3')
-    expect(formatChartValue(26.759999999999998)).toBe('26.76')
-    expect(formatChartValue(12.520000000000001)).toBe('12.52')
-    expect(formatChartValue(1.234)).toBe('1.234')
-    expect(formatChartValue(100)).toBe('100')
+  it('rounds calculated values to the source precision without changing exact values', () => {
+    expect(formatChartValue(26.7599999999998, 2)).toBe('26.76')
+    expect(formatChartValue(0.30000000000000004, 1)).toBe('0.3')
+    expect(formatChartValue(12.520000000000001, 2)).toBe('12.52')
+    expect(formatChartValue(1.234, 3)).toBe('1.234')
+    expect(formatChartValue(100, 0)).toBe('100')
+    expect(formatChartValue(1000000000000001, 0)).toBe('1000000000000001')
+    expect(formatChartValue(Number.MAX_SAFE_INTEGER, 0)).toBe(String(Number.MAX_SAFE_INTEGER))
+    expect(formatChartValue(1.000000000000001, 15)).toBe('1.000000000000001')
   })
 
-  it('keeps ordinary large and small values in decimal notation', () => {
-    expect(formatChartValue(1_234_567_890_123.5)).toBe('1234567890123.5')
-    expect(formatChartValue(0.000001234)).toBe('0.000001234')
+  it('counts decimal places in standard and exponent notation', () => {
+    expect(fractionDigits(1.23)).toBe(2)
+    expect(fractionDigits(1)).toBe(0)
+    expect(fractionDigits(1e-7)).toBe(7)
+    expect(fractionDigits(1.2e-7)).toBe(8)
+    expect(fractionDigits(1e3)).toBe(0)
+    expect(formatChartValue(1.2e-7, fractionDigits(1.2e-7))).toBe('0.00000012')
   })
 })
 
@@ -372,12 +379,12 @@ describe('v7: table sections/totals, stacked bars, card tones', () => {
         data: [],
         stacked: true,
         series: [
-          { label: 'A', data: [{ label: 'Q1', value: 0.1 }, { label: 'Q2', value: 1.1 }] },
+          { label: 'A', data: [{ label: 'Q1', value: 0.1 }, { label: 'Q2', value: 1.234 }] },
           { label: 'B', data: [{ label: 'Q1', value: 0.2 }, { label: 'Q2', value: 2.2 }] },
         ],
       }],
     })
-    expect([...container.querySelectorAll('[class*="barValue"]')].map(node => node.textContent)).toEqual(['0.3', '3.3'])
+    expect([...container.querySelectorAll('[class*="barValue"]')].map(node => node.textContent)).toEqual(['0.3', '3.434'])
     fireEvent.mouseEnter(container.querySelector('[class*="stackSeg"]')!)
     expect(container.querySelector('[class*="chartTip"]')?.textContent).toContain('合计0.3')
     expect(container.textContent).not.toContain('0.30000000000000004')
