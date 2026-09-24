@@ -529,6 +529,12 @@ function formatTick(t: number): string {
   return String(Math.round(t * 100) / 100)
 }
 
+/** 格式化图表计算值，隐藏二进制浮点运算产生的无效尾数。 */
+export function formatChartValue(value: number): string {
+  if (!Number.isFinite(value)) return String(value)
+  return String(Number(value.toPrecision(15)))
+}
+
 /** Shared y-axis gutter: ticks positioned against the same percentage scale
  *  the plot uses, so labels line up with the gridlines. */
 function YAxis({ ticks, lo, span }: { ticks: number[]; lo: number; span: number }) {
@@ -615,7 +621,7 @@ export const BarsNode = memo(function BarsNode({ chart }: { chart: GenuiChart })
               <div className={css.hbarTracks}>
                 {stacked
                   ? (
-                    <div className={css.hbarTrack} title={`${label}: ${categoryTotals[i] ?? 0}`}>
+                    <div className={css.hbarTrack} title={`${label}: ${formatChartValue(categoryTotals[i] ?? 0)}`}>
                       {seriesValues.map((values, si) => {
                         const v = Math.max(0, values[i] ?? 0)
                         const total = categoryTotals[i] ?? 0
@@ -625,8 +631,8 @@ export const BarsNode = memo(function BarsNode({ chart }: { chart: GenuiChart })
                             key={si}
                             className={css.hbarSeg}
                             style={{ width: `${width}%`, background: colors[si] }}
-                            onMouseEnter={event => show(event, [[grouped[si]!.label, String(v)], [tr('block.total'), String(total)]])}
-                            onMouseMove={event => show(event, [[grouped[si]!.label, String(v)], [tr('block.total'), String(total)]])}
+                            onMouseEnter={event => show(event, [[grouped[si]!.label, String(v)], [tr('block.total'), formatChartValue(total)]])}
+                            onMouseMove={event => show(event, [[grouped[si]!.label, String(v)], [tr('block.total'), formatChartValue(total)]])}
                           />
                         )
                       })}
@@ -640,8 +646,8 @@ export const BarsNode = memo(function BarsNode({ chart }: { chart: GenuiChart })
                         <div
                           className={css.hbarFill}
                           style={{ width: `${width}%`, background: colors[si] }}
-                          onMouseEnter={event => show(event, isGrouped ? [[grouped[si]!.label, String(v)], [tr('block.total'), String(categoryTotals[i] ?? 0)]] : [[label, String(v)]])}
-                          onMouseMove={event => show(event, isGrouped ? [[grouped[si]!.label, String(v)], [tr('block.total'), String(categoryTotals[i] ?? 0)]] : [[label, String(v)]])}
+                          onMouseEnter={event => show(event, isGrouped ? [[grouped[si]!.label, String(v)], [tr('block.total'), formatChartValue(categoryTotals[i] ?? 0)]] : [[label, String(v)]])}
+                          onMouseMove={event => show(event, isGrouped ? [[grouped[si]!.label, String(v)], [tr('block.total'), formatChartValue(categoryTotals[i] ?? 0)]] : [[label, String(v)]])}
                         />
                       </div>
                     )
@@ -649,7 +655,7 @@ export const BarsNode = memo(function BarsNode({ chart }: { chart: GenuiChart })
               </div>
               {showValues && (
                 <span className={css.hbarValue}>
-                  {isGrouped ? categoryTotals[i] ?? 0 : String(data[i]?.value ?? '')}
+                  {isGrouped ? formatChartValue(categoryTotals[i] ?? 0) : String(data[i]?.value ?? '')}
                 </span>
               )}
             </div>
@@ -687,7 +693,7 @@ export const BarsNode = memo(function BarsNode({ chart }: { chart: GenuiChart })
                   <>
                     {showValues && (
                       <span className={css.barValue} style={{ bottom: `calc(${pct(categoryTotals[i] ?? 0)}% + 4px)` }}>
-                        {String(categoryTotals[i] ?? 0)}
+                        {formatChartValue(categoryTotals[i] ?? 0)}
                       </span>
                     )}
                     <div className={css.stack} style={{ height: `${Math.max(0, pct(categoryTotals[i] ?? 0))}%` }}>
@@ -697,7 +703,7 @@ export const BarsNode = memo(function BarsNode({ chart }: { chart: GenuiChart })
                         const v = Math.max(0, raw)
                         const total = categoryTotals[i] ?? 0
                         const segHeight = total === 0 ? 0 : (v / total) * pct(total)
-                        const rows: TipRow[] = [[entry.label, String(raw)], [tr('block.total'), String(total)]]
+                        const rows: TipRow[] = [[entry.label, String(raw)], [tr('block.total'), formatChartValue(total)]]
                         return (
                           <div
                             key={si}
@@ -728,8 +734,8 @@ export const BarsNode = memo(function BarsNode({ chart }: { chart: GenuiChart })
                               height: `${Math.max(0, pct(Math.max(0, v)))}%`,
                               background: colors[si],
                             }}
-                            onMouseEnter={event => show(event, [[entry.label, String(datum?.value ?? '')], [tr('block.total'), String(categoryTotals[i] ?? 0)]])}
-                            onMouseMove={event => show(event, [[entry.label, String(datum?.value ?? '')], [tr('block.total'), String(categoryTotals[i] ?? 0)]])}
+                            onMouseEnter={event => show(event, [[entry.label, String(datum?.value ?? '')], [tr('block.total'), formatChartValue(categoryTotals[i] ?? 0)]])}
+                            onMouseMove={event => show(event, [[entry.label, String(datum?.value ?? '')], [tr('block.total'), formatChartValue(categoryTotals[i] ?? 0)]])}
                           />
                         </div>
                       )
