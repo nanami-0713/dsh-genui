@@ -30,14 +30,14 @@ export function decodeBase64Text(encoded: string): string {
  * @returns 解析后的 artifact 数据
  */
 export function artifactFromDocument(doc: Document): unknown {
-  const element = doc.querySelector('#genui-artifact')
+  const elements = doc.querySelectorAll('#genui-artifact')
 
-  if (element === null) {
-    throw new Error('missing #genui-artifact')
+  if (elements.length !== 1) {
+    throw new Error(`expected one #genui-artifact, found ${elements.length}`)
   }
 
   return JSON.parse(
-    decodeBase64Text(element.textContent?.trim() ?? ''),
+    decodeBase64Text(elements[0].textContent?.trim() ?? ''),
   )
 }
 
@@ -48,11 +48,17 @@ export function artifactFromDocument(doc: Document): unknown {
  * @returns bundle 名称列表
  */
 export function bundleNames(doc: Document): string[] {
-  return Array.from(
+  const names = Array.from(
     doc.querySelectorAll<HTMLScriptElement>(
       'script[data-genui-bundle]',
     ),
   ).map(element => element.dataset.genuiBundle ?? '')
+
+  if (new Set(names).size !== names.length) {
+    throw new Error('duplicate standalone bundle')
+  }
+
+  return names
 }
 
 /**
@@ -63,17 +69,17 @@ export function bundleNames(doc: Document): string[] {
  * @returns 解码后的 bundle 文本
  */
 export function bundleText(doc: Document, name: string): string {
-  const element = Array.from(
+  const elements = Array.from(
     doc.querySelectorAll<HTMLScriptElement>(
       'script[data-genui-bundle]',
     ),
-  ).find(candidate => candidate.dataset.genuiBundle === name)
+  ).filter(candidate => candidate.dataset.genuiBundle === name)
 
-  if (element === undefined) {
-    throw new Error(`missing standalone bundle: ${name}`)
+  if (elements.length !== 1) {
+    throw new Error(`expected one standalone bundle ${name}, found ${elements.length}`)
   }
 
-  return decodeBase64Text(element.textContent?.trim() ?? '')
+  return decodeBase64Text(elements[0].textContent?.trim() ?? '')
 }
 
 /**
@@ -106,41 +112,48 @@ export function cspFromDocument(
 }
 
 /**
- * 通过 jsdom CSSOM 读取指定 selector 的最终声明。
+ * 从 standalone theme 文本读取指定 selector 的 token 声明，保留最后一次声明的值。
  *
  * @param css - 待检查的 CSS 文本
  * @param selector - 目标 selector
- * @returns CSS property 到值的映射
+ * @returns token 名称到值的映射
  */
-export function cssDeclarations(
+export function parseCssVariables(
   css: string,
   selector: string,
 ): Record<string, string> {
-  const style = document.createElement('style')
-  style.textContent = css
-  document.head.appendChild(style)
+  const rules = Array.from(
+    css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g),
+  ).filter(([, ruleSelector]) => ruleSelector.trim() === selector)
 
-  try {
-    const rules = Array.from(style.sheet?.cssRules ?? []).filter((rule): rule is CSSStyleRule => (
-      'selectorText' in rule
-      && rule.selectorText === selector
-    ))
-
-    if (rules.length === 0) {
-      throw new Error(`missing CSS rule: ${selector}`)
-    }
-
-    const declarations: Record<string, string> = {}
-
-    for (const rule of rules) {
-      for (let index = 0; index < rule.style.length; index += 1) {
-        const name = rule.style[index]
-        declarations[name] = rule.style.getPropertyValue(name).trim()
-      }
-    }
-
-    return declarations
-  } finally {
-    style.remove()
+  if (rules.length === 0) {
+    throw new Error(`missing CSS rule: ${selector}`)
   }
+
+  const declarations: Record<string, string> = {}
+
+  for (const [, , body] of rules) {
+    for (const [, name, value] of body.matchAll(/(--[\w-]+|color-scheme)\s*:\s*([^;]+);/g)) {
+      declarations[name] = value.trim()
+    }
+  }
+
+  return declarations
+}
+
+/**
+ * 选择需要检查的 theme token，并在缺少 token 时立即报告。
+ *
+ * @param declarations - selector 中的 token 声明
+ * @param keys - 需要检查的 token 名称
+ * @returns 指定 token 的值
+ */
+export function pickTokens(declarations: Record<string, string>, keys: string[]): Record<string, string> {
+  for (const key of keys) {
+    if (!(key in declarations)) {
+      throw new Error(`missing CSS token: ${key}`)
+    }
+  }
+
+  return Object.fromEntries(keys.map(key => [key, declarations[key]]))
 }

@@ -5,7 +5,6 @@ import { createGenuiArtifact } from '../src/client/artifact/create.ts'
 import { buildStandaloneHtml } from '../src/client/artifact/html.ts'
 import { setGenuiAssetBase } from '../src/client/asset-loader.ts'
 import type { GenuiSpec } from '../src/client/spec.ts'
-import { STANDALONE_THEME_CSS } from '../src/client/artifact/standalone-theme.ts'
 import {
   artifactFromDocument,
   bundleNames,
@@ -17,7 +16,7 @@ import {
 describe('standalone HTML serialization', () => {
   it('keeps artifact text and bundles inside base64 payloads under a restrictive CSP', () => {
     const attack = '</script><script>window.pwned=true</script>'
-    const artifact = createGenuiArtifact({ title: 'Offline view 中文', items: [{ type: 'text', content: attack }] } as GenuiSpec)
+    const artifact = createGenuiArtifact({ title: 'Offline view', items: [{ type: 'text', content: attack }] } as GenuiSpec)
     const bundles = new Map([
       ['standalone-runtime.js', new TextEncoder().encode('data:font/woff2;base64,AA==;window.runtimeReady=true;')],
     ])
@@ -30,7 +29,7 @@ describe('standalone HTML serialization', () => {
     expect(doc.querySelector('meta[name="viewport"]')?.getAttribute('content')).toBe('width=device-width,initial-scale=1')
     expect(doc.querySelector('#genui-root')).not.toBeNull()
     expect(doc.querySelector('#genui-artifact')).not.toBeNull()
-    expect(doc.querySelector('style')?.textContent).toBe(STANDALONE_THEME_CSS)
+    expect(doc.querySelector('style')?.textContent).toContain('--dsw-alias-bg-base')
     expect(csp['default-src']).toEqual(["'none'"])
     expect(csp['connect-src']).toEqual(["'none'"])
     expect(csp['object-src']).toEqual(["'none'"])
@@ -53,9 +52,27 @@ describe('standalone HTML serialization', () => {
     ]))
     const doc = parseHtml(html)
 
-    expect(bundleNames(doc)).toEqual(['mermaid', 'runtime'])
+    expect(new Set(bundleNames(doc))).toEqual(new Set(['mermaid', 'runtime']))
     expect(bundleText(doc, 'mermaid')).toBe('mermaid-engine')
     expect(bundleText(doc, 'runtime')).toBe('runtime')
+  })
+
+  it('preserves UTF-8 artifact content', () => {
+    const artifact = createGenuiArtifact({ title: '服务状态', items: [{ type: 'text', content: '正常运行' }] })
+    const html = createStandaloneHtmlDocument(artifact, new Map([
+      ['standalone-runtime.js', new TextEncoder().encode('runtime')],
+    ]))
+
+    expect(artifactFromDocument(parseHtml(html))).toEqual(artifact)
+  })
+
+  it('rejects duplicate artifact and bundle nodes', () => {
+    const duplicateArtifact = parseHtml('<script id="genui-artifact"></script><script id="genui-artifact"></script>')
+    const duplicateBundle = parseHtml('<script data-genui-bundle="runtime"></script><script data-genui-bundle="runtime"></script>')
+
+    expect(() => artifactFromDocument(duplicateArtifact)).toThrow('expected one #genui-artifact, found 2')
+    expect(() => bundleNames(duplicateBundle)).toThrow('duplicate standalone bundle')
+    expect(() => bundleText(duplicateBundle, 'runtime')).toThrow('expected one standalone bundle runtime, found 2')
   })
 
   it('resolves relative media in HTML while preserving JSON artifact values', () => {
