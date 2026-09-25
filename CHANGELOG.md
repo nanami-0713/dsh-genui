@@ -8,7 +8,7 @@
 
 ### 兼容性
 
-- `preview-latest` 宿主 API 验证更新为 DSH `0.1.7-rc.2`，并保留 `0.1.7-rc.1` 标签检查能力。
+- `preview-latest` 与 Release API、packed smoke 宿主检查统一更新为 DSH `0.1.7-rc.2`，并保留 `0.1.7-rc.1` API 标签检查能力。
 
 ### 修复
 
