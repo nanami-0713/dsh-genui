@@ -33,7 +33,7 @@ const codeStyle: CSSProperties = { overflow: 'auto', padding: 12, borderRadius: 
 export function CodeBlock({ code, lang, copyLabel, copiedLabel }: { code: string; lang?: string; copyLabel?: string; copiedLabel?: string }): ReactNode {
   const [copied, setCopied] = useState(false)
   const copy = async (): Promise<void> => {
-    await writeClipboard(code)
+    if (!await writeClipboard(code)) return
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1200)
   }
@@ -75,10 +75,14 @@ export async function writeClipboard(text: string): Promise<boolean> {
   textarea.style.position = 'fixed'
   textarea.style.left = '-9999px'
   document.body.appendChild(textarea)
-  textarea.select()
-  const copied = document.execCommand('copy')
-  textarea.remove()
-  return copied
+  try {
+    textarea.select()
+    return document.execCommand('copy')
+  } catch {
+    return false
+  } finally {
+    textarea.remove()
+  }
 }
 
 /** standalone 模式不连接 DSH 注册表，因此自定义组件始终不可用。 */

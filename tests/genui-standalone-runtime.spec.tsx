@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createGenuiArtifact } from '../src/client/artifact/create.ts'
 import '../src/client/standalone/runtime.tsx'
-import { JsonTree } from '../src/client/standalone/primitive-adapter.tsx'
+import { CodeBlock, JsonTree } from '../src/client/standalone/primitive-adapter.tsx'
 import { setLocale } from '../src/client/i18n/index.ts'
 
 afterEach(() => {
@@ -17,6 +17,17 @@ describe('standalone runtime', () => {
     const view = render(<JsonTree data={{ answer: 42 }} copyable />)
     expect(view.container.querySelectorAll('pre')).toHaveLength(1)
     expect(screen.getByRole('button', { name: '复制' })).toBeTruthy()
+  })
+
+  it('keeps CodeBlock copy feedback unchanged when clipboard APIs are unavailable', async () => {
+    const view = render(<CodeBlock code="copy me" />)
+    const button = screen.getByRole('button', { name: '复制' })
+
+    fireEvent.click(button)
+    await act(async () => { await Promise.resolve() })
+
+    expect(button.textContent).toBe('复制')
+    expect(view.container.querySelector('textarea')).toBeNull()
   })
 
   it('restores artifact presentation and durable state while keeping model actions inactive', () => {

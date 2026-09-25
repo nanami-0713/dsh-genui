@@ -2,18 +2,30 @@
 export const STANDALONE_THEME_CSS = `
 :root {
   color-scheme: light;
-  --dsw-alias-bg-base: #f8fafc;
-  --dsw-alias-bg-layer-1: #ffffff;
-  --dsw-alias-bg-layer-2: #f1f5f9;
-  --dsw-alias-bg-layer-3: #e2e8f0;
-  --dsw-alias-border-l1: #dbe2ea;
-  --dsw-alias-border-l2: #cbd5e1;
+  --dsw-static-neutral-bluish-00: rgb(255, 255, 255);
+  --dsw-static-neutral-bluish-50: rgb(249, 250, 251);
+  --dsw-static-neutral-bluish-300: rgb(207, 211, 214);
+  --dsw-static-neutral-bluish-400: rgb(173, 178, 184);
+  --dsw-static-neutral-bluish-600: rgb(129, 133, 140);
+  --dsw-static-neutral-bluish-700: rgb(97, 102, 107);
+  --dsw-static-neutral-bluish-800: rgb(53, 54, 56);
+  --dsw-static-neutral-bluish-850: rgb(44, 44, 46);
+  --dsw-static-neutral-bluish-875: rgb(35, 35, 36);
+  --dsw-static-neutral-bluish-900: rgb(27, 27, 28);
+  --dsw-static-neutral-bluish-950: rgb(21, 21, 23);
+  --dsw-static-neutral-bluish-1000: rgb(15, 17, 21);
+  --dsw-alias-bg-base: var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-bg-layer-1: var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-bg-layer-2: var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-bg-layer-3: var(--dsw-static-neutral-bluish-00);
+  --dsw-alias-border-l1: rgba(0, 0, 0, 0.04);
+  --dsw-alias-border-l2: rgba(0, 0, 0, 0.1);
   --dsw-alias-fill-hover: #eef2f7;
-  --dsw-alias-label-primary: #1e293b;
-  --dsw-alias-label-secondary: #64748b;
-  --dsw-alias-label-tertiary: #94a3b8;
-  --dsw-alias-label-caption: #64748b;
-  --dsw-alias-markdown-code-block: #f1f5f9;
+  --dsw-alias-label-primary: var(--dsw-static-neutral-bluish-1000);
+  --dsw-alias-label-secondary: var(--dsw-static-neutral-bluish-700);
+  --dsw-alias-label-tertiary: var(--dsw-static-neutral-bluish-600);
+  --dsw-alias-label-caption: var(--dsw-static-neutral-bluish-400);
+  --dsw-alias-markdown-code-block: var(--dsw-static-neutral-bluish-50);
   --dsw-alias-markdown-hr: #cbd5e1;
   /* DSH 静态调色板供语义状态别名使用。 */
   --dsw-static-deepseek-100: rgb(228, 237, 253);
@@ -51,18 +63,18 @@ export const STANDALONE_THEME_CSS = `
 }
 body[data-ds-dark-theme] {
   color-scheme: dark;
-  --dsw-alias-bg-base: #11151b;
-  --dsw-alias-bg-layer-1: #191f27;
-  --dsw-alias-bg-layer-2: #222a35;
-  --dsw-alias-bg-layer-3: #2d3744;
-  --dsw-alias-border-l1: #303b49;
-  --dsw-alias-border-l2: #465365;
+  --dsw-alias-bg-base: var(--dsw-static-neutral-bluish-950);
+  --dsw-alias-bg-layer-1: var(--dsw-static-neutral-bluish-875);
+  --dsw-alias-bg-layer-2: var(--dsw-static-neutral-bluish-850);
+  --dsw-alias-bg-layer-3: var(--dsw-static-neutral-bluish-800);
+  --dsw-alias-border-l1: rgba(255, 255, 255, 0.06);
+  --dsw-alias-border-l2: rgba(255, 255, 255, 0.12);
   --dsw-alias-fill-hover: #2b3542;
-  --dsw-alias-label-primary: #e8edf5;
-  --dsw-alias-label-secondary: #a8b3c2;
-  --dsw-alias-label-tertiary: #7f8b9b;
-  --dsw-alias-label-caption: #a8b3c2;
-  --dsw-alias-markdown-code-block: #202833;
+  --dsw-alias-label-primary: var(--dsw-static-neutral-bluish-50);
+  --dsw-alias-label-secondary: var(--dsw-static-neutral-bluish-300);
+  --dsw-alias-label-tertiary: var(--dsw-static-neutral-bluish-400);
+  --dsw-alias-label-caption: var(--dsw-static-neutral-bluish-600);
+  --dsw-alias-markdown-code-block: var(--dsw-static-neutral-bluish-900);
   --dsw-alias-markdown-hr: #465365;
   /* DSH 深色主题语义状态别名。 */
   --dsw-alias-state-business-primary: var(--dsw-static-deepseek-400);
