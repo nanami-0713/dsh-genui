@@ -19,6 +19,7 @@ describe('standalone theme', () => {
   })
 
   it('uses DSH dark surface, border, and label tokens', () => {
+    expect(STANDALONE_THEME_CSS.match(/--dsw-static-neutral-bluish-400:/g)).toHaveLength(1)
     expect(STANDALONE_THEME_CSS).toContain('--dsw-static-neutral-bluish-950: rgb(21, 21, 23);')
     expect(STANDALONE_THEME_CSS).toContain('--dsw-static-neutral-bluish-875: rgb(35, 35, 36);')
     expect(STANDALONE_THEME_CSS).toContain('--dsw-static-neutral-bluish-850: rgb(44, 44, 46);')

@@ -59,7 +59,6 @@ export const STANDALONE_THEME_CSS = `
   --dsw-static-deepseek-300: rgb(183, 200, 254);
   --dsw-static-deepseek-450: rgb(86, 134, 254);
   --dsw-static-blue-450: rgb(77, 147, 248);
-  --dsw-static-neutral-bluish-400: rgb(173, 178, 184);
 }
 body[data-ds-dark-theme] {
   color-scheme: dark;
