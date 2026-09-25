@@ -270,6 +270,28 @@ describe('validate_dsh_ui tool', () => {
     expect(value).not.toContain('warning=block_markdown')
   })
 
+  it('keeps chart category labels free of block Markdown warnings', async () => {
+    const value = String(await vtool.execute({ spec: { items: [
+      { type: 'chart', data: [
+        { label: '版本 ```alpha```', value: 1 },
+        { label: 'A | B\n---|---', value: 2 },
+      ] },
+      { type: 'chart', kind: 'line', series: [{ label: '版本', data: [
+        { label: '~~~alpha~~~', value: 1 },
+        { label: 'A | B\n---|---', value: 2 },
+      ] }] },
+    ] } }))
+    expect(value).toContain('status=valid')
+    expect(value).toContain('next=emit_fence')
+    expect(value).not.toContain('warning=block_markdown')
+
+    const seriesLabel = String(await vtool.execute({ spec: { items: [
+      { type: 'chart', series: [{ label: '```series```', data: [{ label: '```category```', value: 1 }] }] },
+    ] } }))
+    expect(seriesLabel).toContain('warning=block_markdown path=items[0].series[0].label kind=fenced_code replacement=code')
+    expect(seriesLabel.match(/warning=block_markdown/g)).toHaveLength(1)
+  })
+
   it('requires content changes after repairing JSON with block Markdown', async () => {
     const value = String(await vtool.execute({
       spec: '{"items":[{"type":"callout","content":"| A | B |\\n|---|---|\\n| x | y |"},],}',

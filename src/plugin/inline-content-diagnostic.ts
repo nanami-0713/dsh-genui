@@ -29,7 +29,7 @@ function hasMarkdownTable(value: string): boolean {
   return false
 }
 
-/** 按组件结构检查真正交给 renderInline 的 canonical 字符串字段。 */
+/** 按组件结构检查需要块级内容诊断的 canonical 显示字段。 */
 export function collectInlineContentWarnings(spec: GenuiSpec): InlineContentWarning[] {
   const warnings: InlineContentWarning[] = []
 
@@ -107,11 +107,7 @@ export function collectInlineContentWarnings(spec: GenuiSpec): InlineContentWarn
         node.details?.forEach((detail, i) => detail?.forEach((child, j) => visit(child, `${path}.details[${i}][${j}]`)))
         break
       case 'chart':
-        node.data.forEach((datum, i) => check(datum.label, `${path}.data[${i}].label`))
-        node.series?.forEach((series, i) => {
-          check(series.label, `${path}.series[${i}].label`)
-          series.data.forEach((datum, j) => check(datum.label, `${path}.series[${i}].data[${j}].label`))
-        })
+        node.series?.forEach((series, i) => check(series.label, `${path}.series[${i}].label`))
         break
       case 'tabs':
         node.tabs.forEach((tab, i) => {
