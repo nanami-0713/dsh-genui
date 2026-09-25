@@ -44,16 +44,22 @@
   text-align: left;
 }
 
+.item:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.menuNotice {
+  max-width: 260px;
+  padding: 2px 9px 6px;
+  color: var(--dsw-alias-state-error-primary, #d94848);
+}
+
 .notice,
 .status {
   color: var(--dsw-alias-label-tertiary);
 }
 
-.status {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+.statusError {
+  color: var(--dsw-alias-state-error-primary, #d94848);
 }

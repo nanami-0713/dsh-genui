@@ -60,4 +60,12 @@ describe('artifact export entry points', () => {
     fireEvent.click(screen.getByText('项目仪表盘'))
     expect(document.querySelector('[data-genui-template-preview] [data-genui-export]')).toBeNull()
   })
+
+  it('explains why custom components prevent HTML export while keeping JSON available', () => {
+    render(<ExportableGenuiBlock spec={{ items: [{ type: 'weather', temp: 20 }] } as never} />)
+    fireEvent.click(screen.getByRole('button', { name: '导出' }))
+    expect((screen.getByRole('menuitem', { name: '独立 HTML' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByRole('menuitem', { name: 'GenUI JSON' })).toBeTruthy()
+    expect(screen.getByText(/自定义组件 weather/)).toBeTruthy()
+  })
 })

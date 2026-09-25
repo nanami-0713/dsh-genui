@@ -24,7 +24,7 @@
     "./assets/three": "./src/client/asset-three.ts",
     "./assets/echarts-core": "./src/client/asset-echarts-core.ts",
     "./assets/echarts": "./src/client/asset-echarts.ts",
-    "./assets/standalone": "./src/client/standalone/runtime.tsx",
+    "./assets/standalone": "./lib/assets/standalone-runtime.js",
     "./skill": "./SKILL.md"
   },
   "files": [

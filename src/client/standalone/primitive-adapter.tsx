@@ -46,9 +46,17 @@ export function DiffBlock({ diffs }: { diffs: Array<{ path: string; oldText?: st
 }
 
 /** 在独立页面显示 JSON，并提供本地折叠控制。 */
-export function JsonTree({ data, label, copyable }: { data: object | unknown[]; label?: string; copyable?: boolean; labels?: JsonTreeLabels }): ReactNode {
+export function JsonTree({ data, label, copyable, labels }: { data: object | unknown[]; label?: string; copyable?: boolean; labels?: JsonTreeLabels }): ReactNode {
   const [expanded, setExpanded] = useState(true)
-  return <section><button type="button" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? t('label.collapse') : t('label.expandNode')} {label ?? 'JSON'}</button>{copyable && <CodeBlock code={JSON.stringify(data, null, 2)} lang="json" />}{expanded && <pre style={codeStyle}>{JSON.stringify(data, null, 2)}</pre>}</section>
+  const [copied, setCopied] = useState(false)
+  const json = JSON.stringify(data, null, 2)
+  /** 复制当前 JSON 内容并更新按钮反馈。 */
+  const copy = async (): Promise<void> => {
+    if (!await writeClipboard(json)) return
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1200)
+  }
+  return <section><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button type="button" aria-expanded={expanded} onClick={() => setExpanded(value => !value)}>{expanded ? t('label.collapse') : t('label.expandNode')} {label ?? 'JSON'}</button>{copyable && <button type="button" onClick={() => void copy()}>{copied ? labels?.copied ?? t('label.copied') : labels?.copyJson ?? t('label.copy')}</button>}</div>{expanded && <pre style={codeStyle}>{json}</pre>}</section>
 }
 
 /** 将文本复制到系统剪贴板。 */

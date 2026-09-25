@@ -27,4 +27,9 @@ describe('GenUI standalone asset selection', () => {
     expect(result.externalMedia).toEqual(['https://example.com/image.png'])
     expect(result.hasModelActions).toBe(true)
   })
+
+  it('lists relative media as external dependencies', () => {
+    expect(report([{ type: 'image', src: '/attachments/foo.png' }, { type: 'video', src: 'media/demo.mp4', poster: 'media/poster.png' }]).externalMedia)
+      .toEqual(['/attachments/foo.png', 'media/demo.mp4', 'media/poster.png'])
+  })
 })

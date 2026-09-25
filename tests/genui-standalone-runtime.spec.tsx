@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createGenuiArtifact } from '../src/client/artifact/create.ts'
 import '../src/client/standalone/runtime.tsx'
+import { JsonTree } from '../src/client/standalone/primitive-adapter.tsx'
 import { setLocale } from '../src/client/i18n/index.ts'
 
 afterEach(() => {
@@ -12,6 +13,12 @@ afterEach(() => {
 })
 
 describe('standalone runtime', () => {
+  it('shows one JSON body with a separate copy control', () => {
+    const view = render(<JsonTree data={{ answer: 42 }} copyable />)
+    expect(view.container.querySelectorAll('pre')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: '复制' })).toBeTruthy()
+  })
+
   it('restores artifact presentation and durable state while keeping model actions inactive', () => {
     const artifact = createGenuiArtifact({ items: [
       { type: 'button', label: 'Run', action: 'run' },

@@ -19,6 +19,7 @@ function ArtifactExportMenu({ getArtifact }: ArtifactExportMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const [status, setStatus] = useState('')
+  const [statusError, setStatusError] = useState(false)
   const report = analyzeGenuiPortability(getArtifact().spec)
 
   useEffect(() => {
@@ -40,6 +41,7 @@ function ArtifactExportMenu({ getArtifact }: ArtifactExportMenuProps) {
   /** 执行用户选择的下载并更新辅助说明。 */
   const exportAs = async (format: 'html' | 'json'): Promise<void> => {
     setOpen(false)
+    setStatusError(false)
     setStatus(t('artifact.exporting'))
     try {
       const artifact = getArtifact()
@@ -57,6 +59,7 @@ function ArtifactExportMenu({ getArtifact }: ArtifactExportMenuProps) {
         console.warn('[dsh-genui] artifact export failed:', error instanceof Error ? error.message : 'unknown error')
         setStatus(t('artifact.exportFailed'))
       }
+      setStatusError(true)
     }
   }
 
@@ -67,12 +70,13 @@ function ArtifactExportMenu({ getArtifact }: ArtifactExportMenuProps) {
       </button>
       {open && (
         <div className={css.menu} role="menu">
-          <button type="button" role="menuitem" className={css.item} onClick={() => void exportAs('html')}>{t('artifact.exportHtml')}</button>
+          <button type="button" role="menuitem" className={css.item} disabled={report.customTypes.length > 0} onClick={() => void exportAs('html')}>{t('artifact.exportHtml')}</button>
+          {report.customTypes.length > 0 && <span className={css.menuNotice}>{t('artifact.unsupportedCustom', { types: report.customTypes.join(', ') })}</span>}
           <button type="button" role="menuitem" className={css.item} onClick={() => void exportAs('json')}>{t('artifact.exportJson')}</button>
         </div>
       )}
       {report.externalMedia.length > 0 && <span className={css.notice}>{t('artifact.externalMediaNotice')}</span>}
-      <span className={css.status} aria-live="polite">{status}</span>
+      <span className={statusError ? css.statusError : css.status} aria-live="polite">{status}</span>
     </div>
   )
 }

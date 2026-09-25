@@ -1,20 +1,10 @@
 import { echartEngineFor } from '../echarts-engine.ts'
 import type { GenuiNode, GenuiSpec } from '../spec.ts'
 import { GENUI_NATIVE_TYPES } from '../genui-runtime/schema.ts'
+import { safeMediaSrc } from '../genui-runtime/value-utils.ts'
 import type { GenuiPortabilityReport, GenuiStandaloneAsset } from './types.ts'
 
 const ASSET_ORDER: GenuiStandaloneAsset[] = ['mermaid', 'three', 'echarts-core', 'echarts-full']
-
-/** 识别可直接联网加载的绝对媒体地址。 */
-function externalUrl(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined
-  try {
-    const url = new URL(value)
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined
-  } catch {
-    return undefined
-  }
-}
 
 /** 递归收集当前节点树依赖的引擎和媒体信息。 */
 function scan(items: unknown[], report: GenuiPortabilityReport, assets: Set<GenuiStandaloneAsset>): void {
@@ -27,10 +17,10 @@ function scan(items: unknown[], report: GenuiPortabilityReport, assets: Set<Genu
     if (node.type === 'echart') assets.add(echartEngineFor(node as Extract<GenuiNode, { type: 'echart' }>))
     if (typeof node.action === 'string' || node.type === 'submit' && (typeof node.action === 'string' || typeof node.resetAction === 'string')) report.hasModelActions = true
     if (node.type === 'image' || node.type === 'audio' || node.type === 'video') {
-      const src = externalUrl(node.src)
+      const src = safeMediaSrc(node.src)
       if (src !== undefined) report.externalMedia.push(src)
       if (node.type === 'video') {
-        const poster = externalUrl(node.poster)
+        const poster = safeMediaSrc(node.poster)
         if (poster !== undefined) report.externalMedia.push(poster)
       }
     }

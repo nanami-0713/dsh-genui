@@ -3,6 +3,7 @@ import { parseGenuiArtifact } from './parse.ts'
 import { analyzeGenuiPortability } from './portability.ts'
 import { GenuiExportError, type GenuiArtifactV1, type GenuiStandaloneAsset } from './types.ts'
 import { STANDALONE_THEME_CSS } from './standalone-theme.ts'
+import type { GenuiSpec } from '../spec.ts'
 
 const bundleCache = new Map<string, Promise<Uint8Array>>()
 
@@ -39,6 +40,32 @@ function cachedBundle(name: string, code: GenuiStandaloneAsset | 'runtime'): Pro
 /** 创建仅存放 Base64 数据的非执行 payload 节点。 */
 function bundleElement(name: string, bytes: Uint8Array): string {
   return `<script type="application/octet-stream" data-genui-bundle="${name}">${bytesToBase64(bytes)}</script>`
+}
+
+/** 将媒体相对地址转换为导出页面所在站点的绝对地址。 */
+function resolveMediaUrls(spec: GenuiSpec, baseURI: string): GenuiSpec {
+  const copy = structuredClone(spec)
+  /** 遍历规范中的嵌套节点和容器。 */
+  function visit(value: unknown): void {
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item)
+      return
+    }
+    if (typeof value !== 'object' || value === null) return
+    const node = value as Record<string, unknown>
+    if (node.type === 'image' || node.type === 'audio' || node.type === 'video') {
+      for (const field of node.type === 'video' ? ['src', 'poster'] : ['src']) {
+        const media = node[field]
+        if (typeof media !== 'string' || /^https?:\/\//i.test(media)) continue
+        const url = new URL(media, baseURI)
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new GenuiExportError('artifact-invalid', `media URL cannot be exported: ${media}`)
+        node[field] = url.href
+      }
+    }
+    for (const child of Object.values(node)) visit(child)
+  }
+  visit(copy.items)
+  return copy
 }
 
 /** 返回执行内嵌 bundle 的静态启动代码。 */
@@ -79,8 +106,10 @@ start().catch(error => {
 export function createStandaloneHtmlDocument(
   artifact: GenuiArtifactV1,
   bundles: ReadonlyMap<string, Uint8Array>,
+  baseURI = document.baseURI,
 ): string {
-  const encodedArtifact = bytesToBase64(new TextEncoder().encode(JSON.stringify(artifact)))
+  const htmlArtifact = { ...artifact, spec: resolveMediaUrls(artifact.spec, baseURI) }
+  const encodedArtifact = bytesToBase64(new TextEncoder().encode(JSON.stringify(htmlArtifact)))
   const engines = artifactPortabilityAssets(artifact).map(name => {
     const bytes = bundles.get(`${name}.js`)
     if (bytes === undefined) throw new GenuiExportError('asset-fetch-failed', `${name}.js: bundle unavailable`)

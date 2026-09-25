@@ -38,6 +38,19 @@ describe('standalone HTML serialization', () => {
     expect(html).not.toContain('mermaid-engine')
   })
 
+  it('resolves relative media in HTML while preserving JSON artifact values', () => {
+    const artifact = createGenuiArtifact({ items: [
+      { type: 'image', src: '/attachments/foo.png' },
+      { type: 'video', src: 'media/demo.mp4', poster: 'media/poster.png' },
+    ] } as GenuiSpec)
+    const html = createStandaloneHtmlDocument(artifact, new Map([['standalone-runtime.js', new TextEncoder().encode('runtime')]]), 'https://example.com/reports/page')
+    const encoded = html.match(/id="genui-artifact">([^<]+)</)?.[1]
+    const exported = JSON.parse(atob(encoded!))
+    expect(exported.spec.items.map((item: { src: string }) => item.src)).toEqual(['https://example.com/attachments/foo.png', 'https://example.com/reports/media/demo.mp4'])
+    expect(exported.spec.items[1].poster).toBe('https://example.com/reports/media/poster.png')
+    expect(artifact.spec.items[0]).toMatchObject({ src: '/attachments/foo.png' })
+  })
+
   it('rejects custom renderers before fetching standalone bundles', async () => {
     const artifact = createGenuiArtifact({ items: [{ type: 'weather', temp: 20 }] } as unknown as GenuiSpec)
     await expect(buildStandaloneHtml(artifact)).rejects.toMatchObject({ code: 'unsupported-custom-component' })
