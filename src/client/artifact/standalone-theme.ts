@@ -17,7 +17,7 @@ export const STANDALONE_THEME_CSS = `
   --dsw-alias-markdown-hr: #cbd5e1;
   /* DSH 静态调色板供语义状态别名使用。 */
   --dsw-static-deepseek-100: rgb(228, 237, 253);
-  --dsw-static-deepseek-400: rgb(103, 158, 254);
+  --dsw-static-deepseek-400: rgb(122, 170, 255);
   --dsw-static-deepseek-500: rgb(65, 118, 230);
   --dsw-static-deepseek-800: rgb(52, 65, 91);
   --dsw-static-green-100: rgb(230, 250, 237);

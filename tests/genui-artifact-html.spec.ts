@@ -59,13 +59,15 @@ describe('standalone HTML serialization', () => {
         rows: [['api-gateway', '0.04%']],
         types: ['text', 'delta'],
       }],
-    })
+    }, undefined, { theme: 'dark' })
     const html = createStandaloneHtmlDocument(artifact, new Map([
       ['standalone-runtime.js', new TextEncoder().encode('runtime')],
     ]))
 
     expect(html).toContain('--dsw-alias-state-success-secondary: var(--dsw-static-green-400)')
     expect(html).toContain('--dsw-static-green-400: rgb(78, 209, 126)')
+    expect(html).toContain('--dsw-alias-state-business-primary: var(--dsw-static-deepseek-400)')
+    expect(html).toContain('--dsw-static-deepseek-400: rgb(122, 170, 255)')
   })
 
   it('rejects custom renderers before fetching standalone bundles', async () => {
