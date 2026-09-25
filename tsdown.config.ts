@@ -118,21 +118,32 @@ function standaloneKatexCssPlugin(): NonNullable<UserConfig['plugins']>[number] 
     },
     async load(id: string) {
       if (id !== virtualId) return null
-      const transformed = transform({ filename: cssPath, code: await readFile(cssPath), analyzeDependencies: true })
+      const transformed = transform({
+        filename: cssPath,
+        code: await readFile(cssPath),
+        analyzeDependencies: true,
+        visitor: {
+          Rule: {
+            /** 独立 HTML 面向支持 WOFF2 的浏览器，每种字体只需内嵌一份。 */
+            'font-face'(rule) {
+              const source = rule.value.properties.find(property => property.type === 'source')
+              if (source === undefined) throw new Error('KaTeX font face has no source')
+              const woff2 = source.value.filter(entry => entry.type === 'url' && entry.value.format?.type === 'woff2')
+              if (woff2.length !== 1) throw new Error('KaTeX font face must have exactly one WOFF2 source')
+              source.value = woff2
+              return rule
+            },
+          },
+        },
+      })
       let css = transformed.code.toString()
       for (const dependency of transformed.dependencies ?? []) {
         if (dependency.type !== 'url' || dependency.url.startsWith('data:') || dependency.url.startsWith('#')) continue
         const fontPath = resolvePath(dirname(cssPath), dependency.url)
         const extension = extname(new URL(dependency.url, 'https://genui.invalid/').pathname)
-        const mime = extension === '.woff2' ? 'font/woff2'
-          : extension === '.woff' ? 'font/woff'
-            : extension === '.ttf' ? 'font/ttf'
-              : extension === '.otf' ? 'font/otf'
-                : extension === '.svg' ? 'image/svg+xml'
-                  : undefined
-        if (mime === undefined) throw new Error(`unsupported KaTeX asset: ${dependency.url}`)
+        if (extension !== '.woff2') throw new Error(`unsupported KaTeX asset: ${dependency.url}`)
         const font = await readFile(fontPath)
-        css = css.replaceAll(dependency.placeholder, `data:${mime};base64,${font.toString('base64')}`)
+        css = css.replaceAll(dependency.placeholder, `data:font/woff2;base64,${font.toString('base64')}`)
       }
       return `const style = document.createElement('style'); style.dataset.genuiStandaloneKatex = ''; style.textContent = ${JSON.stringify(css)}; document.head.appendChild(style);`
     },

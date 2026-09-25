@@ -218,7 +218,7 @@ The core render package stays light (≈110 KB min / 28 KB gzip); the mermaid, t
 
 ## Export a GenUI artifact
 
-Settled GenUI blocks expose **Export → Standalone HTML** and **GenUI JSON**. The `.html` file includes its renderer, styles, KaTeX fonts, and only the chart engines used by the spec. Local controls continue to work; model actions are disabled. Network media keeps its original URL. `.genui.json` preserves the normalized spec, durable interaction state, locale, and theme. Hosts can use `createGenuiArtifact`, `parseGenuiArtifact`, `serializeGenuiArtifact`, and `buildStandaloneHtml` from `@changfenhuang/dsh-genui/embed`.
+Settled GenUI blocks expose **Export → Standalone HTML** and **GenUI JSON**. The `.html` file includes its renderer, styles, KaTeX WOFF2 fonts, and only the chart engines used by the spec. Local controls continue to work; model actions are disabled. Network media keeps its original URL. `.genui.json` preserves the normalized spec, durable interaction state, locale, and theme. Hosts can use `createGenuiArtifact`, `parseGenuiArtifact`, `serializeGenuiArtifact`, and `buildStandaloneHtml` from `@changfenhuang/dsh-genui/embed`.
 
 ## ❓ FAQ
 

@@ -244,7 +244,7 @@ dsh plugin --profile web add link:$PWD
 
 ### 导出 GenUI 成果文件
 
-已完成的 GenUI 区块提供“导出 → 独立 HTML”和“GenUI JSON”。`.html` 文件内含渲染器、样式、KaTeX 字体和规格实际需要的图形引擎，本地控件可以继续使用，模型动作按钮会禁用。网络媒体保留原地址。`.genui.json` 保存规范化规格、可持久化交互状态、语言和主题。宿主可从 `@changfenhuang/dsh-genui/embed` 使用 `createGenuiArtifact`、`parseGenuiArtifact`、`serializeGenuiArtifact` 和 `buildStandaloneHtml`。
+已完成的 GenUI 区块提供“导出 → 独立 HTML”和“GenUI JSON”。`.html` 文件内含渲染器、样式、KaTeX WOFF2 字体和规格实际需要的图形引擎，本地控件可以继续使用，模型动作按钮会禁用。网络媒体保留原地址。`.genui.json` 保存规范化规格、可持久化交互状态、语言和主题。宿主可从 `@changfenhuang/dsh-genui/embed` 使用 `createGenuiArtifact`、`parseGenuiArtifact`、`serializeGenuiArtifact` 和 `buildStandaloneHtml`。
 
 ```sh
 pnpm install
