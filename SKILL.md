@@ -72,7 +72,7 @@ description: "Render structured interactive UI inline through the dsh-ui fence. 
 - submit: `{"type":"submit","label":"<user-language action>","action":"grade","groups":["q1","styles"],"resetAction":"redo"?}` — 聚合按钮：纯 radio 且题目带 `answer` 时仍本地立即判卷（得分 + 每题 ✓/✗ + 解析，零往返）；其余聚合场景一次发送 `[genui-action]`，payload 为 `{answers:{q1:"<user-language option>",styles:["<user-language option>","<user-language option>"]},fields:{id:"<user-language value>"},total,answered}`。`groups` 中每个 radio 必须已选择、每个 checkbox 组必须至少勾选一项才可提交
 - switch: `{"type":"switch","label":"...","checked":true?,"action":"toggle"?}`
 - textarea: `{"type":"textarea","label":"...","placeholder":"...","rows":n?,"value":"...","action":"save"?,"id":"field-id"?}` — action 在失焦和 **Ctrl/Cmd+Enter** 时触发；blur 仅值有变化才发送；带 `id` 的值刷新后保留
-- tabs: `{"type":"tabs","tabs":[{"label":"...","items":[...]}]}`
+- tabs: `{"type":"tabs","tabs":[{"label":"...","items":[...]}]}` — 空 tab 可以省略 `items`，会按空数组处理
 - accordion: `{"type":"accordion","items":[{"title":"...","items":[...]}]}`
 - copy: `{"type":"copy","label":"<user-language action>","text":"<user-language text>"}`
 
