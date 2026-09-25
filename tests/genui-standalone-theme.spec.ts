@@ -72,4 +72,11 @@ describe('standalone theme', () => {
     expect(dark['--dsw-alias-state-warn-tertiary']).toBe('var(--dsw-static-amber-900)')
     expect(dark['--dsw-alias-state-error-primary']).toBe('var(--dsw-static-red-400)')
   })
+
+  it('uses the final declaration when a selector appears again', () => {
+    const css = `${STANDALONE_THEME_CSS}\n:root { --dsw-alias-state-success-secondary: var(--dsw-static-red-400); }`
+    const light = cssDeclarations(css, ':root')
+
+    expect(light['--dsw-alias-state-success-secondary']).toBe('var(--dsw-static-red-400)')
+  })
 })

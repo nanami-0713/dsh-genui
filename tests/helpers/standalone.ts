@@ -121,20 +121,22 @@ export function cssDeclarations(
   document.head.appendChild(style)
 
   try {
-    const rule = Array.from(style.sheet?.cssRules ?? []).find(rule => (
+    const rules = Array.from(style.sheet?.cssRules ?? []).filter((rule): rule is CSSStyleRule => (
       'selectorText' in rule
       && rule.selectorText === selector
-    )) as CSSStyleRule | undefined
+    ))
 
-    if (rule === undefined) {
+    if (rules.length === 0) {
       throw new Error(`missing CSS rule: ${selector}`)
     }
 
     const declarations: Record<string, string> = {}
 
-    for (let index = 0; index < rule.style.length; index += 1) {
-      const name = rule.style[index]
-      declarations[name] = rule.style.getPropertyValue(name).trim()
+    for (const rule of rules) {
+      for (let index = 0; index < rule.style.length; index += 1) {
+        const name = rule.style[index]
+        declarations[name] = rule.style.getPropertyValue(name).trim()
+      }
     }
 
     return declarations
