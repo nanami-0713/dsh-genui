@@ -24,6 +24,7 @@
     "./assets/three": "./src/client/asset-three.ts",
     "./assets/echarts-core": "./src/client/asset-echarts-core.ts",
     "./assets/echarts": "./src/client/asset-echarts.ts",
+    "./assets/standalone": "./lib/assets/standalone-runtime.js",
     "./skill": "./SKILL.md"
   },
   "files": [
@@ -175,7 +176,7 @@
   "scripts": {
     "build": "node scripts/clean.mjs && tsc -p tsconfig.json && tsdown",
     "test": "vitest run",
-    "check": "node scripts/clean.mjs && tsc -p tsconfig.json && vitest run && tsdown",
+    "check": "node scripts/clean.mjs && tsc -p tsconfig.json && vitest run && tsdown && node scripts/check-standalone.mjs",
     "check:host-api": "node scripts/check-host-api.mjs",
     "prepack": "node scripts/prepack.mjs"
   },

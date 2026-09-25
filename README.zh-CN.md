@@ -242,6 +242,10 @@ dsh plugin --profile web add link:$PWD
 
 调用 `setGenuiAssetBase` 设置本地引擎目录；从公开的 `@changfenhuang/dsh-genui/assets/mermaid`、`assets/three`、`assets/echarts-core`、`assets/echarts` 构建对应脚本。模型指引从 `@changfenhuang/dsh-genui/skill` 读取。宿主只补自己的交付通道和设计变量；渲染器仍使用本包与 `@deepseek-ai/dsh-client-ui-primitives` 的组件。构建时提供 React、CSS Modules、KaTeX 字体及所用引擎依赖。
 
+### 导出 GenUI 成果文件
+
+已完成的 GenUI 区块提供“导出 → HTML”和“GenUI JSON”。`.html` 文件内含渲染器、样式、KaTeX WOFF2 字体和规格实际需要的图形引擎，本地控件可以继续使用，模型动作按钮会禁用。相对媒体地址会按导出页面的地址转换为绝对地址；离线打开时，网络媒体仍需连接原站点。`.genui.json` 保留原媒体地址、规范化规格、可持久化交互状态、语言和主题。自定义组件会禁用 HTML 导出，导出错误会显示在菜单旁。宿主可从 `@changfenhuang/dsh-genui/embed` 使用 `createGenuiArtifact`、`parseGenuiArtifact`、`serializeGenuiArtifact` 和 `buildStandaloneHtml`；`@changfenhuang/dsh-genui/assets/standalone` 指向可供复制或提供下载的运行文件。
+
 ```sh
 pnpm install
 pnpm run check   # 类型检查 + 全量测试 + 构建
