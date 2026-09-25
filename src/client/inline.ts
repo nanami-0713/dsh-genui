@@ -23,7 +23,7 @@ function InlineMath({ source, display }: { source: string; display: boolean }) {
 // A real newline in the string is its own token rendered as <br>, so text
 // fields express a line break via JSON "\n" — no HTML parsing, and the
 // single-line (nowrap) chrome classes never contain one.
-const INLINE = /`[^`\n]+`|\\\\|\\\$|(?<![\\$])\$\$(?:\\.|[^\\])*?\$\$|\\\[(?:\\(?!\])[^]|[^\\])*?\\\]|\\\((?:\\(?!\))[^]|[^\\])*?\\\)|(?<![\\$])\$(?!\s|\$)(?:\\.|[^$\\\n])+(?<!\s)\$(?!\d|\$)|\*\*[\s\S]+?\*\*|==[\s\S]+?==|\[[^\]\n]+\]\([^)\s]+\)|\r?\n/g
+const INLINE = /(?<!`)`[^`\n]+`(?!`)|\\\\|\\\$|(?<![\\$])\$\$(?:\\.|[^\\])*?\$\$|\\\[(?:\\(?!\])[^]|[^\\])*?\\\]|\\\((?:\\(?!\))[^]|[^\\])*?\\\)|(?<![\\$])\$(?!\s|\$)(?:\\.|[^$\\\n])+(?<!\s)\$(?!\d|\$)|\*\*[\s\S]+?\*\*|==[\s\S]+?==|\[[^\]\n]+\]\([^)\s]+\)|\r?\n/g
 
 export function hasInlineMarkup(text: string): boolean {
   return typeof text === 'string' && /[`*=$\\\n\r]|\[/.test(text)
