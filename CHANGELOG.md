@@ -6,6 +6,14 @@
 
 - 完成态 GenUI 支持导出 standalone HTML 与 `.genui.json`；独立页面内嵌渲染器、样式、KaTeX 字体及按规格选择的图形引擎，JSON 保存安全的交互状态、语言和主题（#205）。
 
+### 兼容性
+
+- `preview-latest` 与 Release API、packed smoke 宿主检查统一更新为 DSH `0.1.7-rc.2`，并保留 `0.1.7-rc.1` API 标签检查能力。
+
+### 修复
+
+- 根据 Session 格式版本生成 fence 修复反馈来源；v4 使用 `plugin:@changfenhuang/dsh-genui`，旧格式继续使用 `plugin` 来源，避免修复请求导致整轮失败（#218）。自我识别同时覆盖原始插件来源和迁移后的 v4 来源。
+
 ## [0.11.1] - 2026-09-24
 
 ### 兼容性
