@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { hasFenceRegistry } from './helpers/fence-host'
 import { GenuiActionContext } from '../src/client/action-context.ts'
 import { GenuiBlock } from '../src/client/GenuiBlock.tsx'
 
@@ -32,7 +31,7 @@ function renderBlock(spec: unknown, stateKey: string) {
   return render(<GenuiBlock spec={spec as never} stateKey={stateKey} />)
 }
 
-describe.skipIf(!hasFenceRegistry)('quiz id reset', () => {
+describe('quiz id reset', () => {
   it('bumping quiz id clears the answered state at the same tree position', () => {
     const stateKey = 'quiz-id-reset'
     const { rerender } = renderBlock(quizSpec('q1', '1+1=?'), stateKey)
@@ -56,7 +55,10 @@ describe.skipIf(!hasFenceRegistry)('quiz id reset', () => {
     fireEvent.click(options[0])
     expect(options.every(b => b.disabled)).toBe(true)
 
-    rerender(<GenuiBlock spec={quizSpec('q1', '1+1=?') as never} stateKey={stateKey} />)
+    // Change a non-id field so the re-render is real: an identical spec
+    // would be dropped by GenuiBlock's specEquivalent() memo comparator
+    // and the assertion would pass without QuizNode ever re-rendering.
+    rerender(<GenuiBlock spec={quizSpec('q1', '3+3=?') as never} stateKey={stateKey} />)
     // Still answered: only the retry button remains clickable.
     expect(screen.getAllByRole('button').filter(b => !b.disabled).length).toBe(1)
   })
