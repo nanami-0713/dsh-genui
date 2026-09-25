@@ -5,28 +5,44 @@ import { createGenuiArtifact } from '../src/client/artifact/create.ts'
 import { buildStandaloneHtml } from '../src/client/artifact/html.ts'
 import { setGenuiAssetBase } from '../src/client/asset-loader.ts'
 import type { GenuiSpec } from '../src/client/spec.ts'
+import { STANDALONE_THEME_CSS } from '../src/client/artifact/standalone-theme.ts'
+import {
+  artifactFromDocument,
+  bundleNames,
+  bundleText,
+  cspFromDocument,
+  parseHtml,
+} from './helpers/standalone.ts'
 
 describe('standalone HTML serialization', () => {
   it('keeps artifact text and bundles inside base64 payloads under a restrictive CSP', () => {
     const attack = '</script><script>window.pwned=true</script>'
-    const artifact = createGenuiArtifact({ title: 'Offline view', items: [{ type: 'text', content: attack }] } as GenuiSpec)
+    const artifact = createGenuiArtifact({ title: 'Offline view 中文', items: [{ type: 'text', content: attack }] } as GenuiSpec)
     const bundles = new Map([
       ['standalone-runtime.js', new TextEncoder().encode('data:font/woff2;base64,AA==;window.runtimeReady=true;')],
     ])
     const html = createStandaloneHtmlDocument(artifact, bundles)
-    expect(html).toContain('<!doctype html>')
-    expect(html).toContain('charset="utf-8"')
-    expect(html).toContain('name="viewport"')
-    expect(html).toContain("connect-src 'none'")
-    expect(html).toContain('id="genui-root"')
-    expect(html).toContain('id="genui-artifact"')
+    const doc = parseHtml(html)
+    const csp = cspFromDocument(doc)
+
+    expect(doc.doctype?.name).toBe('html')
+    expect(doc.querySelector('meta[charset]')?.getAttribute('charset')).toBe('utf-8')
+    expect(doc.querySelector('meta[name="viewport"]')?.getAttribute('content')).toBe('width=device-width,initial-scale=1')
+    expect(doc.querySelector('#genui-root')).not.toBeNull()
+    expect(doc.querySelector('#genui-artifact')).not.toBeNull()
+    expect(doc.querySelector('style')?.textContent).toBe(STANDALONE_THEME_CSS)
+    expect(csp['default-src']).toEqual(["'none'"])
+    expect(csp['connect-src']).toEqual(["'none'"])
+    expect(csp['object-src']).toEqual(["'none'"])
+    expect(csp['base-uri']).toEqual(["'none'"])
+    expect(csp['form-action']).toEqual(["'none'"])
+    expect(csp['script-src']).toEqual(["'unsafe-inline'", 'blob:'])
     expect(html).not.toContain(attack)
     expect(html).not.toContain('window.pwned=true')
-    expect(html).toContain(btoa(JSON.stringify(artifact)))
-    const runtimePayload = html.match(/data-genui-bundle="runtime">([^<]+)</)?.[1]
-    expect(runtimePayload).toBeDefined()
-    expect(new TextDecoder().decode(Uint8Array.from(atob(runtimePayload!), character => character.charCodeAt(0)))).toContain('data:font/woff2;base64,')
-    expect(html.match(/<script\b/g)?.length).toBe(3)
+    expect(artifactFromDocument(doc)).toEqual(artifact)
+    expect(bundleNames(doc)).toEqual(['runtime'])
+    expect(bundleText(doc, 'runtime')).toBe('data:font/woff2;base64,AA==;window.runtimeReady=true;')
+    expect(doc.querySelectorAll('script')).toHaveLength(3)
   })
 
   it('embeds only required engine payloads', () => {
@@ -35,9 +51,11 @@ describe('standalone HTML serialization', () => {
       ['standalone-runtime.js', new TextEncoder().encode('runtime')],
       ['mermaid.js', new TextEncoder().encode('mermaid-engine')],
     ]))
-    expect(html).toContain('data-genui-bundle="mermaid"')
-    expect(html).not.toContain('data-genui-bundle="three"')
-    expect(html).not.toContain('mermaid-engine')
+    const doc = parseHtml(html)
+
+    expect(bundleNames(doc)).toEqual(['mermaid', 'runtime'])
+    expect(bundleText(doc, 'mermaid')).toBe('mermaid-engine')
+    expect(bundleText(doc, 'runtime')).toBe('runtime')
   })
 
   it('resolves relative media in HTML while preserving JSON artifact values', () => {
@@ -46,30 +64,11 @@ describe('standalone HTML serialization', () => {
       { type: 'video', src: 'media/demo.mp4', poster: 'media/poster.png' },
     ] } as GenuiSpec)
     const html = createStandaloneHtmlDocument(artifact, new Map([['standalone-runtime.js', new TextEncoder().encode('runtime')]]), 'https://example.com/reports/page')
-    const encoded = html.match(/id="genui-artifact">([^<]+)</)?.[1]
-    const exported = JSON.parse(atob(encoded!))
+    const doc = parseHtml(html)
+    const exported = artifactFromDocument(doc) as { spec: { items: Array<{ src: string; poster?: string }> } }
     expect(exported.spec.items.map((item: { src: string }) => item.src)).toEqual(['https://example.com/attachments/foo.png', 'https://example.com/reports/media/demo.mp4'])
     expect(exported.spec.items[1].poster).toBe('https://example.com/reports/media/poster.png')
     expect(artifact.spec.items[0]).toMatchObject({ src: '/attachments/foo.png' })
-  })
-
-  it('embeds canonical DSH semantic colors in standalone HTML', () => {
-    const artifact = createGenuiArtifact({
-      items: [{
-        type: 'table',
-        columns: ['Service', 'Error rate'],
-        rows: [['api-gateway', '0.04%']],
-        types: ['text', 'delta'],
-      }],
-    }, undefined, { theme: 'dark' })
-    const html = createStandaloneHtmlDocument(artifact, new Map([
-      ['standalone-runtime.js', new TextEncoder().encode('runtime')],
-    ]))
-
-    expect(html).toContain('--dsw-alias-state-success-secondary: var(--dsw-static-green-400)')
-    expect(html).toContain('--dsw-static-green-400: rgb(78, 209, 126)')
-    expect(html).toContain('--dsw-alias-state-business-primary: var(--dsw-static-deepseek-400)')
-    expect(html).toContain('--dsw-static-deepseek-400: rgb(122, 170, 255)')
   })
 
   it('rejects custom renderers before fetching standalone bundles', async () => {
@@ -96,10 +95,11 @@ describe('standalone HTML serialization', () => {
       const artifact = createGenuiArtifact({ items: [{ type: 'text', content: 'retry' }] })
       await expect(buildStandaloneHtml(artifact)).rejects.toMatchObject({ code: 'runtime-fetch-failed' })
       const html = await buildStandaloneHtml(artifact)
+      const doc = parseHtml(html)
 
       expect(requestCount).toBe(2)
-      expect(html).toContain('data-genui-bundle="runtime"')
-      expect(html).toContain(btoa('globalThis.standaloneRuntimeLoaded = true;'))
+      expect(bundleNames(doc)).toEqual(['runtime'])
+      expect(bundleText(doc, 'runtime')).toBe('globalThis.standaloneRuntimeLoaded = true;')
     } finally {
       await new Promise<void>((resolve, reject) => server.close(error => error === undefined ? resolve() : reject(error)))
     }
