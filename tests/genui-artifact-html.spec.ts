@@ -51,6 +51,23 @@ describe('standalone HTML serialization', () => {
     expect(artifact.spec.items[0]).toMatchObject({ src: '/attachments/foo.png' })
   })
 
+  it('embeds canonical DSH semantic colors in standalone HTML', () => {
+    const artifact = createGenuiArtifact({
+      items: [{
+        type: 'table',
+        columns: ['Service', 'Error rate'],
+        rows: [['api-gateway', '0.04%']],
+        types: ['text', 'delta'],
+      }],
+    })
+    const html = createStandaloneHtmlDocument(artifact, new Map([
+      ['standalone-runtime.js', new TextEncoder().encode('runtime')],
+    ]))
+
+    expect(html).toContain('--dsw-alias-state-success-secondary: var(--dsw-static-green-400)')
+    expect(html).toContain('--dsw-static-green-400: rgb(78, 209, 126)')
+  })
+
   it('rejects custom renderers before fetching standalone bundles', async () => {
     const artifact = createGenuiArtifact({ items: [{ type: 'weather', temp: 20 }] } as unknown as GenuiSpec)
     await expect(buildStandaloneHtml(artifact)).rejects.toMatchObject({ code: 'unsupported-custom-component' })
