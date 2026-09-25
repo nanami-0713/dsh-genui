@@ -2,9 +2,9 @@
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  min-height: 30px;
-  margin: 0 0 6px auto;
+  margin: 8px 0 6px;
   font: 12px/1.4 system-ui, sans-serif;
 }
 
@@ -55,8 +55,7 @@
   color: var(--dsw-alias-state-error-primary, #d94848);
 }
 
-.notice,
-.status {
+.notice {
   color: var(--dsw-alias-label-tertiary);
 }
 

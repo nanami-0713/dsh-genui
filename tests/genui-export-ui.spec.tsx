@@ -1,3 +1,5 @@
+import { Blob as NodeBlob } from 'node:buffer'
+import { URL as NodeURL } from 'node:url'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ExportableGenuiBlock } from '../src/client/artifact/ExportableGenuiBlock.tsx'
@@ -51,7 +53,7 @@ describe('artifact export entry points', () => {
     const trigger = screen.getByRole('button', { name: 'Export' })
     expect(trigger.getAttribute('aria-haspopup')).toBe('menu')
     fireEvent.click(trigger)
-    expect(screen.getByRole('menuitem', { name: 'Standalone HTML' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'HTML' })).toBeTruthy()
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('menu')).toBeNull()
     view.unmount()
@@ -64,8 +66,32 @@ describe('artifact export entry points', () => {
   it('explains why custom components prevent HTML export while keeping JSON available', () => {
     render(<ExportableGenuiBlock spec={{ items: [{ type: 'weather', temp: 20 }] } as never} />)
     fireEvent.click(screen.getByRole('button', { name: '导出' }))
-    expect((screen.getByRole('menuitem', { name: '独立 HTML' }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('menuitem', { name: 'HTML' }) as HTMLButtonElement).disabled).toBe(true)
     expect(screen.getByRole('menuitem', { name: 'GenUI JSON' })).toBeTruthy()
     expect(screen.getByText(/自定义组件 weather/)).toBeTruthy()
+  })
+
+  it('does not render status text after a successful export', async () => {
+    const originalURL = globalThis.URL
+    const originalBlob = globalThis.Blob
+    const cancelDownload = (event: MouseEvent): void => {
+      if (event.target instanceof HTMLAnchorElement && event.target.hasAttribute('download')) event.preventDefault()
+    }
+    globalThis.URL = NodeURL
+    globalThis.Blob = NodeBlob
+    document.addEventListener('click', cancelDownload, true)
+    try {
+      render(<ExportableGenuiBlock spec={{ items: [{ type: 'text', content: 'View' }] }} />)
+      fireEvent.click(screen.getByRole('button', { name: '导出' }))
+      fireEvent.click(screen.getByRole('menuitem', { name: 'GenUI JSON' }))
+      await new Promise(resolve => window.setTimeout(resolve, 1))
+      expect(screen.queryByText('正在准备下载…')).toBeNull()
+      expect(screen.queryByText('已开始下载。')).toBeNull()
+      expect(screen.queryByText('导出失败，请重试。')).toBeNull()
+    } finally {
+      document.removeEventListener('click', cancelDownload, true)
+      globalThis.URL = originalURL
+      globalThis.Blob = originalBlob
+    }
   })
 })

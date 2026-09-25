@@ -13,13 +13,12 @@ interface ArtifactExportMenuProps {
   getArtifact: () => ReturnType<typeof createGenuiArtifact>
 }
 
-/** 提供 JSON 和独立 HTML 的本地化导出菜单。 */
+/** 提供 JSON 和 HTML 的本地化导出菜单。 */
 function ArtifactExportMenu({ getArtifact }: ArtifactExportMenuProps) {
   const t = useT()
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const [status, setStatus] = useState('')
-  const [statusError, setStatusError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const report = analyzeGenuiPortability(getArtifact().spec)
 
   useEffect(() => {
@@ -41,30 +40,31 @@ function ArtifactExportMenu({ getArtifact }: ArtifactExportMenuProps) {
   /** 执行用户选择的下载并更新辅助说明。 */
   const exportAs = async (format: 'html' | 'json'): Promise<void> => {
     setOpen(false)
-    setStatusError(false)
-    setStatus(t('artifact.exporting'))
+    setErrorMessage('')
     try {
       const artifact = getArtifact()
       if (format === 'html') await downloadGenuiArtifactHtml(artifact)
       else downloadGenuiArtifactJson(artifact)
-      setStatus(t('artifact.exported'))
     } catch (error) {
       if (error instanceof GenuiExportError) {
-        if (error.code === 'unsupported-custom-component') console.warn('[dsh-genui] standalone export rejected:', error.message)
-        else console.warn('[dsh-genui] artifact export failed:', error.code, error.message)
-        setStatus(error.code === 'unsupported-custom-component'
-          ? t('artifact.unsupportedCustom', { types: report.customTypes.join(', ') })
-          : t('artifact.exportFailed'))
+        if (error.code === 'unsupported-custom-component') {
+          console.warn('[dsh-genui] standalone export rejected:', error.message)
+          setErrorMessage(t('artifact.unsupportedCustom', { types: report.customTypes.join(', ') }))
+        } else {
+          console.warn('[dsh-genui] artifact export failed:', error.code, error.message)
+          setErrorMessage(t('artifact.exportFailed'))
+        }
       } else {
         console.warn('[dsh-genui] artifact export failed:', error instanceof Error ? error.message : 'unknown error')
-        setStatus(t('artifact.exportFailed'))
+        setErrorMessage(t('artifact.exportFailed'))
       }
-      setStatusError(true)
     }
   }
 
   return (
     <div className={css.chrome} ref={rootRef} data-genui-export>
+      {report.externalMedia.length > 0 && <span className={css.notice}>{t('artifact.externalMediaNotice')}</span>}
+      {errorMessage !== '' && <span className={css.statusError} aria-live="polite">{errorMessage}</span>}
       <button type="button" className={css.trigger} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(value => !value)}>
         {t('artifact.export')}
       </button>
@@ -75,8 +75,6 @@ function ArtifactExportMenu({ getArtifact }: ArtifactExportMenuProps) {
           <button type="button" role="menuitem" className={css.item} onClick={() => void exportAs('json')}>{t('artifact.exportJson')}</button>
         </div>
       )}
-      {report.externalMedia.length > 0 && <span className={css.notice}>{t('artifact.externalMediaNotice')}</span>}
-      <span className={statusError ? css.statusError : css.status} aria-live="polite">{status}</span>
     </div>
   )
 }
