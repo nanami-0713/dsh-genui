@@ -253,6 +253,22 @@ describe('validate_dsh_ui tool', () => {
     expect(value.match(/warning=block_markdown/g)).toHaveLength(3)
   })
 
+  it('ignores index cell content unless a detail toggle displays it', async () => {
+    const ignored = String(await vtool.execute({ spec: { items: [{
+      type: 'table', columns: ['序号'], types: ['index'], rows: [['```ignored```']],
+    }] } }))
+    expect(ignored).toContain('status=valid')
+    expect(ignored).toContain('next=emit_fence')
+    expect(ignored).not.toContain('warning=block_markdown')
+
+    const visible = String(await vtool.execute({ spec: { items: [{
+      type: 'table', columns: ['序号'], types: ['index'], rows: [['```visible```']],
+      details: [[{ type: 'text', content: '说明' }]],
+    }] } }))
+    expect(visible).toContain('warning=block_markdown path=items[0].rows[0][0] kind=fenced_code replacement=code')
+    expect(visible).toContain('next=fix_and_revalidate')
+  })
+
   it('keeps raw-content data and ordinary pipes free of block Markdown warnings', async () => {
     const value = String(await vtool.execute({ spec: { items: [
       { type: 'code', code: '```js\nfoo()\n```' },

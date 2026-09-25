@@ -67,6 +67,28 @@ describe('inline markup', () => {
     expect(out).toContain('```score = 1```')
   })
 
+  it('keeps complete fenced content opaque while parsing surrounding inline text', () => {
+    const out = html('**前文** ```js\nconst name = `foo`\n**原文**\n``` **后文**')
+    expect(out).not.toContain('<code')
+    expect(out).toContain('const name = `foo`')
+    expect(out).toContain('**原文**')
+    expect(out.match(/<strong/g)).toHaveLength(2)
+    expect(out).not.toContain('<br')
+
+    const tilde = html('~~~js\nconst name = `foo`\n~~~')
+    expect(tilde).not.toContain('<code')
+    expect(tilde).toContain('`foo`')
+  })
+
+  it('keeps content after an unclosed fence marker literal', () => {
+    const out = html('**前文** ```js\nconst name = `foo`\n**原文**')
+    expect(out).not.toContain('<code')
+    expect(out).toContain('const name = `foo`')
+    expect(out).toContain('**原文**')
+    expect(out.match(/<strong/g)).toHaveLength(1)
+    expect(out).not.toContain('<br')
+  })
+
   it.each(['``foo``', '```foo```', '````foo````'])('keeps consecutive backticks literal: %s', source => {
     const out = html(source)
     expect(out).not.toContain('<code')

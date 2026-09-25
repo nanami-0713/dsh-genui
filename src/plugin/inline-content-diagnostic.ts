@@ -101,9 +101,13 @@ export function collectInlineContentWarnings(spec: GenuiSpec): InlineContentWarn
         break
       case 'table':
         node.columns.forEach((column, i) => check(column, `${path}.columns[${i}]`))
-        node.rows.forEach((row, i) => row.forEach((cell, j) => {
-          if (typeof cell === 'string') check(cell, `${path}.rows[${i}][${j}]`)
-        }))
+        node.rows.forEach((row, i) => {
+          const detail = node.details?.[i] ?? null
+          row.forEach((cell, j) => {
+            if (node.types?.[j] === 'index' && (j !== 0 || detail === null)) return
+            if (typeof cell === 'string') check(cell, `${path}.rows[${i}][${j}]`)
+          })
+        })
         node.details?.forEach((detail, i) => detail?.forEach((child, j) => visit(child, `${path}.details[${i}][${j}]`)))
         break
       case 'chart':
