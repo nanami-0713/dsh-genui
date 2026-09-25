@@ -30,6 +30,7 @@ function cachedBundle(name: string, code: GenuiStandaloneAsset | 'runtime'): Pro
     if (!response.ok) throw new GenuiExportError(code === 'runtime' ? 'runtime-fetch-failed' : 'asset-fetch-failed', `${name}: HTTP ${response.status}`)
     return new Uint8Array(await response.arrayBuffer())
   }).catch(error => {
+    bundleCache.delete(name)
     if (error instanceof GenuiExportError) throw error
     throw new GenuiExportError(code === 'runtime' ? 'runtime-fetch-failed' : 'asset-fetch-failed', `${name}: ${error instanceof Error ? error.message : 'fetch failed'}`)
   })

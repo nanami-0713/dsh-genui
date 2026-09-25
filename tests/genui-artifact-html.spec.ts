@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { createServer } from 'node:http'
 import { createStandaloneHtmlDocument } from '../src/client/artifact/html.ts'
 import { createGenuiArtifact } from '../src/client/artifact/create.ts'
 import { buildStandaloneHtml } from '../src/client/artifact/html.ts'
+import { setGenuiAssetBase } from '../src/client/asset-loader.ts'
 import type { GenuiSpec } from '../src/client/spec.ts'
 
 describe('standalone HTML serialization', () => {
@@ -73,5 +75,33 @@ describe('standalone HTML serialization', () => {
   it('rejects custom renderers before fetching standalone bundles', async () => {
     const artifact = createGenuiArtifact({ items: [{ type: 'weather', temp: 20 }] } as unknown as GenuiSpec)
     await expect(buildStandaloneHtml(artifact)).rejects.toMatchObject({ code: 'unsupported-custom-component' })
+  })
+
+  it('retries bundle fetching after a failed request', async () => {
+    let requestCount = 0
+    const server = createServer((_request, response) => {
+      requestCount += 1
+      if (requestCount === 1) {
+        response.writeHead(503).end('temporarily unavailable')
+        return
+      }
+      response.writeHead(200, { 'content-type': 'application/javascript' }).end('globalThis.standaloneRuntimeLoaded = true;')
+    })
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
+    const address = server.address()
+    if (address === null || typeof address === 'string') throw new Error('local test server did not bind to a TCP port')
+    setGenuiAssetBase(`http://127.0.0.1:${address.port}/`)
+
+    try {
+      const artifact = createGenuiArtifact({ items: [{ type: 'text', content: 'retry' }] })
+      await expect(buildStandaloneHtml(artifact)).rejects.toMatchObject({ code: 'runtime-fetch-failed' })
+      const html = await buildStandaloneHtml(artifact)
+
+      expect(requestCount).toBe(2)
+      expect(html).toContain('data-genui-bundle="runtime"')
+      expect(html).toContain(btoa('globalThis.standaloneRuntimeLoaded = true;'))
+    } finally {
+      await new Promise<void>((resolve, reject) => server.close(error => error === undefined ? resolve() : reject(error)))
+    }
   })
 })
